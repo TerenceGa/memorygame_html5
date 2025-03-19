@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Card Game</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f8ff;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 500px;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 10px;
+            width: 500px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            height: 120px;
+            background-color: #3498db;
+            border-radius: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            user-select: none;
+        }
+        
+        .card:hover {
+            transform: scale(1.05);
+        }
+        
+        .card.flipped {
+            background-color: #2ecc71;
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .card.matched {
+            background-color: #27ae60;
+            cursor: default;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Memory Card Game</h1>
+    <div class="stats">
+        <div>Score: <span id="score">0</span></div>
+        <div>Attempts: <span id="attempts">0</span></div>
+    </div>
+    <div class="game-container" id="game-container"></div>
+    <button id="reset-btn">Reset Game</button>
+
+    <script>
+        // Card symbols
+        const symbols = ['🍎', '🍌', '🍒', '🍊', '🍇', '🍉', '🍓', '🍍'];
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let score = 0;
+        let attempts = 0;
+        
+        // Initialize the game
+        function initGame() {
+            // Reset variables
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            score = 0;
+            attempts = 0;
+            updateStats();
+            
+            // Create pairs of cards
+            const gameContainer = document.getElementById('game-container');
+            gameContainer.innerHTML = '';
+            
+            // Double the symbols to create pairs and shuffle them
+            const cardSymbols = [...symbols, ...symbols];
+            shuffleArray(cardSymbols);
+            
+            // Create card elements
+            cardSymbols.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.symbol = symbol;
+                card.dataset.index = index;
+                card.addEventListener('click', flipCard);
+                gameContainer.appendChild(card);
+                cards.push(card);
+            });
+        }
+        
+        // Shuffle array (Fisher-Yates algorithm)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        // Flip a card
+        function flipCard() {
+            const selectedCard = this;
+            
+            // Ignore if card is already flipped or matched
+            if (selectedCard.classList.contains('flipped') || 
+                selectedCard.classList.contains('matched') || 
+                flippedCards.length >= 2) {
+                return;
+            }
+            
+            // Flip the card
+            selectedCard.classList.add('flipped');
+            selectedCard.textContent = selectedCard.dataset.symbol;
+            flippedCards.push(selectedCard);
+            
+            // Check if two cards are flipped
+            if (flippedCards.length === 2) {
+                attempts++;
+                updateStats();
+                
+                // Check if the cards match
+                if (flippedCards[0].dataset.symbol === flippedCards[1].dataset.symbol) {
+                    // Match!
+                    setTimeout(() => {
+                        flippedCards.forEach(card => {
+                            card.classList.add('matched');
+                        });
+                        flippedCards = [];
+                        score += 10;
+                        matchedPairs++;
+                        updateStats();
+                        
+                        // Check if game is complete
+                        if (matchedPairs === symbols.length) {
+                            alert(`Congratulations! You won with a score of ${score}!`);
+                        }
+                    }, 500);
+                } else {
+                    // No match
+                    setTimeout(() => {
+                        flippedCards.forEach(card => {
+                            card.classList.remove('flipped');
+                            card.textContent = '';
+                        });
+                        flippedCards = [];
+                    }, 1000);
+                }
+            }
+        }
+        
+        // Update score and attempts display
+        function updateStats() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('attempts').textContent = attempts;
+        }
+        
+        // Reset game button
+        document.getElementById('reset-btn').addEventListener('click', initGame);
+        
+        // Initialize the game when page loads
+        window.addEventListener('load', initGame);
+    </script>
+</body>
+</html>
